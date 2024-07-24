@@ -1,25 +1,63 @@
-import logo from './logo.svg';
-import './App.css';
+// src/App.js
+import React, { useState, useEffect } from 'react';
+import UserTable from './components/UserTable';
+import SearchInput from './components/SearchInput';
+import UserModal from './components/UserModal';
+import './styles.css';
 
-function App() {
+const App = () => {
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  useEffect(() => {
+    fetch('https://dummyjson.com/users')
+      .then(response => response.json())
+      .then(data => {
+        setUsers(data.users);
+        setFilteredUsers(data.users);
+      })
+      .catch(error => {
+        console.error('Error fetching users:', error);
+      });
+  }, []);
+
+  const handleSearch = (query) => {
+    if (query === '') {
+      setFilteredUsers(users);
+      return;
+    }
+
+    fetch(`https://dummyjson.com/users/search?q=${query}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.users) {
+          setFilteredUsers(data.users);
+        } else {
+          setFilteredUsers([]);
+        }
+      })
+      .catch(error => {
+        console.error('Error filtering users:', error);
+        setFilteredUsers([]);
+      });
+  };
+
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedUser(null);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <SearchInput onSearch={handleSearch} />
+      <UserTable users={filteredUsers} onUserClick={handleUserClick} />
+      {selectedUser && <UserModal user={selectedUser} onClose={handleCloseModal} />}
     </div>
   );
-}
+};
 
 export default App;
